@@ -6,15 +6,9 @@ from django.contrib.auth.models import User, auth
 import sys
 from django.http import HttpResponse
 import base64
+
 # Imports the Google Cloud client library
 from google.cloud import vision
-
-# Create your views here.
-def index(request):
-    if request.method == "POST":
-        png_recovered = base64.decodestring((request.__dict__["_post"]["data"]))
-
-    return render(request, "index.html")
 
 def detect_labels_uri(path_name):
     # Instantiates a client
@@ -42,17 +36,39 @@ def detect_labels_uri(path_name):
 
     print('Properties:')
 
-    for color in props.dominant_colors.colors:
+    # sort from greatest pixel fraction to smallest fraction
+    newlist = sorted(props.dominant_colors.colors, key=lambda x: x.pixel_fraction, reverse=True)
+
+    for color in newlist:
+        # select the most common color
         print('fraction: {}'.format(color.pixel_fraction))
         print('\tr: {}'.format(color.color.red))
         print('\tg: {}'.format(color.color.green))
         print('\tb: {}'.format(color.color.blue))
         print('\ta: {}'.format(color.color.alpha))
-
+        
     if response.error.message:
         raise Exception(
             '{}\nFor more info on error messages, check: '
             'https://cloud.google.com/apis/design/errors'.format(
                 response.error.message))
 
-detect_labels_uri("resources/various-shirts-men-clothes-store-shopping-mall-sale-88135317.jpg")
+# Create your views here.
+def index(request):
+    if request.method == "POST":
+        #png_recovered = base64.decodestring((request.__dict__["_post"]["data"]))
+        newjpgtxt = request.__dict__["_post"]["data"]
+
+        encoded_data = newjpgtxt.split("base64,")[1]
+
+        #decode base64 string data
+        decoded_data=base64.b64decode((encoded_data))
+
+        #write the decoded data back to original format in  file
+        img_file = open('image.jpeg', 'wb')
+        img_file.write(decoded_data)
+        img_file.close()
+
+        detect_labels_uri("image.jpeg")
+
+    return render(request, "index.html")
