@@ -52,21 +52,14 @@ def detect_labels_uri(path_name):
     response = client.image_properties(image=image)
     props = response.image_properties_annotation
 
-    # sort from greatest pixel fraction to smallest fraction
-    newList = sorted(props.dominant_colors.colors, key=lambda x: x.pixel_fraction, reverse=True)
-
-    for color in newList:
-        # select the most common color
-        print('fraction: {}'.format(color.pixel_fraction))
-        print('\tr: {}'.format(color.color.red))
-        print('\tg: {}'.format(color.color.green))
-        print('\tb: {}'.format(color.color.blue))
-        print('\ta: {}'.format(color.color.alpha))
+    # sort from greatest pixel fraction to smallest fraction to select the most common color
+    newList = sorted(
+        props.dominant_colors.colors, key=lambda x: x.pixel_fraction, reverse=True
+    )
     
     red = (int)(newList[0].color.red)
     blue = (int)(newList[0].color.blue)
     green = (int)(newList[0].color.green)
-    #named_color = rgb_to_name((red,green,blue), spec='css3')
 
     requested_colour = (red,green,blue)
     closest_name = get_colour_name(requested_colour)
@@ -76,7 +69,6 @@ def detect_labels_uri(path_name):
             "{}\nFor more info on error messages, check: "
             "https://cloud.google.com/apis/design/errors".format(response.error.message)
         )
-
 
     return [closest_name, labels[0].description]
 
@@ -140,6 +132,8 @@ def index(request):
                 ebay_items.append(
                     {"title": title, "link": link, "price": price, "img": img}
                 )
+
+        print(ebay_items)
 
         html_kijiji = requests.get(
             f"https://www.kijiji.ca/b-city-of-toronto/pink-shirt/k0l1700273?rb=true&ll=43.653226%2C-79.383184&address=Toronto%2C+ON&radius=50.0&dc=true",
