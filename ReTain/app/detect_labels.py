@@ -1,19 +1,10 @@
 import io
 import os
 
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User, auth
-# Imports the Google Cloud client library
-from google.cloud import vision
-
-# Create your views here.
-def index(request):
-    if request.method == "POST":
-        image_url = request.POST["image"]
-        
-    return render(request, "index.html")
-
 def detect_labels_uri(path_name):
+    # Imports the Google Cloud client library
+    from google.cloud import vision
+
     # Instantiates a client
     client = vision.ImageAnnotatorClient()
 
