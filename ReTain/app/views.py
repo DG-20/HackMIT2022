@@ -111,12 +111,14 @@ def index(request):
         # detect_labels_uri("image_name.jpg")
         color, thing = detect_labels_uri("image.jpeg")
 
+        print("Results: "+color+" "+thing)
+
         headers_ebay = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.19582"
         }
 
         html_ebay = requests.get(
-            "https://www.ebay.com/sch/i.html?_nkw=Minecraft+ps3", headers=headers_ebay
+            f"https://www.ebay.com/sch/i.html?_nkw={color}+{thing}", headers=headers_ebay
         ).text
 
         soup_ebay = bs(html_ebay, "lxml")
@@ -124,19 +126,20 @@ def index(request):
         ebay_items = []
 
         for item in soup_ebay.select(".s-item__wrapper.clearfix"):
-            if item.select(".SECONDARY_INFO")[0].text == "Pre-Owned":
-                title = item.select_one(".s-item__title").text
-                link = item.select_one(".s-item__link")["href"]
-                price = item.select_one(".s-item__price").text
-                img = item.select_one(".s-item__image-img")["src"]
-                ebay_items.append(
-                    {"title": title, "link": link, "price": price, "img": img}
-                )
+            if(item.select(".SECONDARY_INFO") is not None):
+                if item.select(".SECONDARY_INFO")[0].text == "Pre-Owned":
+                    title = item.select_one(".s-item__title").text
+                    link = item.select_one(".s-item__link")["href"]
+                    price = item.select_one(".s-item__price").text
+                    img = item.select_one(".s-item__image-img")["src"]
+                    ebay_items.append(
+                        {"title": title, "link": link, "price": price, "img": img}
+                    )
 
         print(ebay_items)
 
         html_kijiji = requests.get(
-            f"https://www.kijiji.ca/b-city-of-toronto/pink-shirt/k0l1700273?rb=true&ll=43.653226%2C-79.383184&address=Toronto%2C+ON&radius=50.0&dc=true",
+            f"https://www.kijiji.ca/b-city-of-toronto/{color}-{thing}/k0l1700273?rb=true&ll=43.653226%2C-79.383184&address=Toronto%2C+ON&radius=50.0&dc=true",
             headers=headers_ebay,
         ).text
 
