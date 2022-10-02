@@ -87,29 +87,28 @@ def index(request):
         img_file.write(decoded_data)
         img_file.close()
 
-        # url = "https://api.removal.ai/3.0/remove"
+        url = "https://api.removal.ai/3.0/remove"
 
-        # payload={'image_url': 'url_to_image'}
-        # files=[
-        # ('image_file',('image.jpeg',open('image.jpeg','rb'),'image/jpeg'))
-        # ]
+        payload={'image_url': 'url_to_image'}
+        files=[
+        ('image_file',('image.jpeg',open('image.jpeg','rb'),'image/jpeg'))
+        ]
 
-        # headers = {
-        # 'Rm-Token': '633935662e4740.89639290'
-        # }
+        headers = {
+        'Rm-Token': '633973f617eed6.50836218'
+        }
 
-        # response = requests.request("POST", url, headers=headers, data=payload, files=files)
+        response = requests.request("POST", url, headers=headers, data=payload, files=files)
 
-        # print(response.text)
+        print(response.text)
 
-        # image_url = response.json()["url"]
+        image_url = response.json()["url"]
 
-        # img_data = requests.get(image_url).content
-        # with open('image_name.jpg','wb') as handler:
-        #     handler.write(img_data)
+        img_data = requests.get(image_url).content
+        with open('image_name.jpg','wb') as handler:
+            handler.write(img_data)
 
-        # detect_labels_uri("image_name.jpg")
-        color, thing = detect_labels_uri("image.jpeg")
+        color, thing = detect_labels_uri("image_name.jpg")
 
         print("Results: "+color+" "+thing)
 
@@ -126,17 +125,18 @@ def index(request):
         ebay_items = []
 
         for item in soup_ebay.select(".s-item__wrapper.clearfix"):
-            if(item.select(".SECONDARY_INFO") is not None):
-                if item.select(".SECONDARY_INFO")[0].text == "Pre-Owned":
-                    title = item.select_one(".s-item__title").text
-                    link = item.select_one(".s-item__link")["href"]
-                    price = item.select_one(".s-item__price").text
-                    img = item.select_one(".s-item__image-img")["src"]
-                    ebay_items.append(
-                        {"title": title, "link": link, "price": price, "img": img}
-                    )
-
-        print(ebay_items)
+            try:
+                if(item.select(".SECONDARY_INFO") is not None):
+                    if item.select(".SECONDARY_INFO")[0].text == "Pre-Owned":
+                        title = item.select_one(".s-item__title").text
+                        link = item.select_one(".s-item__link")["href"]
+                        price = item.select_one(".s-item__price").text
+                        img = item.select_one(".s-item__image-img")["src"]
+                        ebay_items.append(
+                            {"title": title, "link": link, "price": price, "img": img}
+                        )
+            except:
+                continue
 
         html_kijiji = requests.get(
             f"https://www.kijiji.ca/b-city-of-toronto/{color}-{thing}/k0l1700273?rb=true&ll=43.653226%2C-79.383184&address=Toronto%2C+ON&radius=50.0&dc=true",
@@ -147,18 +147,50 @@ def index(request):
 
         kijiji_items = []
 
+
+
         for item in soup_kijiji.select(".s-item__wrapper.clearfix"):
-            if item.select(".SECONDARY_INFO")[0].text == "Pre-Owned":
-                title = item.select_one(".s-item__title").text
-                link = item.select_one(".s-item__link")["href"]
-                price = item.select_one(".s-item__price").text
-                img = item.select_one(".s-item__image-img")["src"]
-                kijiji_items.append(
-                    {"title": title, "link": link, "price": price, "img": img}
-                )
+            try:
+                if item.select(".SECONDARY_INFO")[0].text == "Pre-Owned":
+                    title = item.select_one(".s-item__title").text
+                    link = item.select_one(".s-item__link")["href"]
+                    price = item.select_one(".s-item__price").text
+                    img = item.select_one(".s-item__image-img")["src"]
+                    kijiji_items.append(
+                        {"title": title, "link": link, "price": price, "img": img}
+                    )
+            except:
+                continue
 
-        return render(
-            request, "index.html", {"ebay": ebay_items, "kijiji": kijiji_items}
-        )
+        kijiji_str = ""
+        for item in kijiji_items:
+            kijiji_str += item["title"]
+            kijiji_str += "\n"
+            kijiji_str += item["link"]
+            kijiji_str += "\n"
+            kijiji_str += item["price"]
+            kijiji_str += ""
+            kijiji_str += item["img"]
+            kijiji_str += "\n\n"
 
-    return render(request, "index.html")
+        ebay_str = ""
+        for item in ebay_items:
+            ebay_str += item["title"]
+            ebay_str += "\n"
+            ebaystr += item["link"]
+            ebay_str += "\n"
+            ebay_str += item["price"]
+            ebay_str += ""
+            ebay_str += item["img"]
+            ebay_str += "\n\n"
+
+        with open("kijiji.txt", "w") as f_out:
+            f_out.write(kijiji_str)
+
+        with open("ebay.txt", "w") as f_out:
+            f_out.write(ebay_str)
+            
+        return render(request, "index.html")
+
+    else:  
+        return render(request, "index.html")
