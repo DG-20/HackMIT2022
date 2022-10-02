@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script
+      type="text/javascript"
+      src="https://code.jquery.com/jquery-1.7.1.min.js"
+    ></script>
     <!-- CSS only -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css"
@@ -12,16 +16,215 @@
       crossorigin="anonymous"
     />
     <title>ReTain</title>
+    <style>
+      #video {
+        border: 1px solid black;
+        width: 320px;
+        height: 240px;
+      }
+
+      #photo {
+        border: 1px solid black;
+        width: 320px;
+        height: 240px;
+      }
+
+      #canvas {
+        display: none;
+      }
+
+      .camera {
+        width: 340px;
+        display: inline-block;
+      }
+
+      .output {
+        width: 340px;
+        display: inline-block;
+      }
+
+      #startbutton {
+        display: block;
+        position: relative;
+        margin-left: auto;
+        margin-right: auto;
+        bottom: 36px;
+        padding: 5px;
+        background-color: #6a67ce;
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        font-size: 14px;
+        color: rgba(255, 255, 255, 1);
+        cursor: pointer;
+      }
+
+      .contentarea {
+        font-size: 16px;
+        font-family: Arial;
+        text-align: center;
+      }
+    </style>
   </head>
   <body>
     <div class="container">
       <h1 class="text-center">ReTain</h1>
-      <p class="text-center"></p>
-      <form action="POST">
-        <label for="form">Upload Image </label>
-        <input type="file" />
-        <button>submit</button>
-      </form>
+      <p class="text-center">Welcome to ReTain.</p>
+      <div class="text-center">
+        <div class="form-group">
+          <form method="POST" action="sell_shoe">
+            {% csrf_token %}
+            <input type="file" name="image" accept="image/*" capture="user" />
+            <label for="form">Upload Image</label>
+            <input type="file" />
+            <button class="btn btn-primary">submit</button>
+          </form>
+        </div>
+      </div>
     </div>
+    <div class="contentarea">
+      <div class="camera">
+        <video id="video">Video stream not available.</video>
+      </div>
+
+      <div><button id="startbutton">Capture Image</button></div>
+
+      <canvas id="canvas"></canvas>
+
+      <div class="output">
+        <img id="photo" alt="The image captured will appear in this box." />
+      </div>
+    </div>
+    <script>
+      (function () {
+        // We will scale the photo width to this.
+        var width = 320;
+        // The height will be computed based on the input stream.
+        var height = 0;
+        var data;
+
+        var streaming = false;
+
+        var video = null;
+        var canvas = null;
+        var photo = null;
+        var startbutton = null;
+
+        function startup() {
+          video = document.getElementById("video");
+          canvas = document.getElementById("canvas");
+          photo = document.getElementById("photo");
+
+          /*The following line is executed when a user clicks on the
+                "Capture Image" button.
+
+                document.getElementById returns the element whose 'id'
+                is 'startbutton'.*/
+          startbutton = document.getElementById("startbutton");
+
+          // Access the video stream from the webcam.
+          navigator.mediaDevices
+            .getUserMedia({
+              video: true,
+              audio: false,
+            })
+            // Upon success, stream video in a video tag.
+            .then(function (stream) {
+              video.srcObject = stream;
+              video.play();
+            })
+            .catch(function (err) {
+              console.log("An error occurred: " + err);
+            });
+
+          video.addEventListener(
+            "canplay",
+            function (ev) {
+              if (!streaming) {
+                height = video.videoHeight / (video.videoWidth / width);
+
+                if (isNaN(height)) {
+                  height = width / (4 / 3);
+                }
+
+                video.setAttribute("width", width);
+                video.setAttribute("height", height);
+                canvas.setAttribute("width", width);
+                canvas.setAttribute("height", height);
+                streaming = true;
+              }
+            },
+            false
+          );
+
+          var URL = "{% url 'index' %}";
+
+          function SendFacialImage() {
+            var csrf = "";
+            console.log("{{csrf_token}}");
+            var facialImage = {
+              data: data,
+              csrfmiddlewaretoken: "{{ csrf_token }}",
+              // csrfmiddlewaretoken: { csrf_token },
+            };
+            $.post(URL, facialImage, function (response) {
+              //   if (response === "success") {
+              //     alert("Facial Image Successfully Sent!");
+              //   } else {
+              //     alert("Error Sending Facial Image!");
+              //   }
+            });
+          }
+
+          startbutton.addEventListener(
+            "click",
+            function (ev) {
+              takepicture();
+              ev.preventDefault();
+              SendFacialImage();
+            },
+            false
+          );
+
+          clearphoto();
+        }
+
+        /*Collect the frames of the photo from the canvas and then
+            convert it into a PNG format, so that it can be shown in
+            the HTML page.*/
+        function clearphoto() {
+          var context = canvas.getContext("2d");
+          context.fillStyle = "#AAA";
+          context.fillRect(0, 0, canvas.width, canvas.height);
+
+          var data = canvas.toDataURL("image/png");
+
+          photo.setAttribute("src", data);
+        }
+
+        /*Capture a frame from the video stream.*/
+        function takepicture() {
+          var context = canvas.getContext("2d");
+          if (width && height) {
+            canvas.width = width;
+            canvas.height = height;
+            context.drawImage(video, 0, 0, width, height);
+
+            /*toDataURL('image/png') returns a data URL containing a
+                    representation of the image in PNG format.*/
+            data = canvas.toDataURL("image/png");
+            console.log(data);
+
+            /*'src' is the name of the attribute whose value is to be set.
+                    'data' is a string containing the value to assign to the attribute.*/
+            photo.setAttribute("src", data);
+          } else {
+            clearphoto();
+          }
+        }
+
+        /*The following code will call the startup() function when
+            the HTML page is loaded.*/
+        window.addEventListener("load", startup, false);
+      })();
+    </script>
   </body>
 </html>
