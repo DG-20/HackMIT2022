@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -15,18 +16,30 @@
       integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT"
       crossorigin="anonymous"
     />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Comfortaa">
     <title>ReTain</title>
     <style>
+      *{
+        font-family: "Comfortaa";
+        padding:1em;
+      }
+      body{
+        background-color: black;
+        justify-content: center;
+        align-items: center;
+      }
       #video {
-        border: 1px solid black;
+        border: 0.1em solid white;
         width: 320px;
         height: 240px;
+        border-radius: 25px;
       }
 
       #photo {
-        border: 1px solid black;
+        border: 0.1em solid white;
         width: 320px;
         height: 240px;
+        border-radius: 25px;
       }
 
       #canvas {
@@ -39,53 +52,54 @@
       }
 
       .output {
-        width: 340px;
+        width: 320px;
         display: inline-block;
       }
 
       #startbutton {
-        display: block;
-        position: relative;
-        margin-left: auto;
-        margin-right: auto;
-        bottom: 36px;
-        padding: 5px;
-        background-color: #6a67ce;
-        border: 1px solid rgba(255, 255, 255, 0.7);
-        font-size: 14px;
-        color: rgba(255, 255, 255, 1);
+        background-color: transparent;
+        border-radius: 25px;
+        border: 0.1em solid white;
+        font-size: 1em;
+        color: white;
         cursor: pointer;
+        width:10em;
+      }
+
+      #startbutton:hover{
+        border: none;
+        border-radius: 25px;
+        border: 0.1em solid transparent;
+        background-image: linear-gradient(60deg, rgb(43, 0, 255), rgb(130, 13, 255));
       }
 
       .contentarea {
-        font-size: 16px;
-        font-family: Arial;
+        font-size: 1em;
         text-align: center;
+        align-items: center;
+        justify-content: center;
+        display: flex;
       }
+
+      .captureRow {
+        padding-top: 1.5em;
+        width:50%;
+      }
+
     </style>
   </head>
   <body>
+ 
     <div class="container">
-      <h1 class="text-center">ReTain</h1>
-      <p class="text-center">Welcome to ReTain.</p>
-      <div class="text-center">
-        <div class="form-group">
-          <form method="POST" action="sell_shoe">
-            {% csrf_token %}
-            <input type="file" name="image" accept="image/*" capture="user" />
-            <label for="form">Upload Image</label>
-            <input type="file" />
-            <button class="btn btn-primary">submit</button>
-          </form>
-        </div>
-      </div>
+      <h1 class="text-center text-white" style="font-weight: 700;">retain</h1>
     </div>
+
+    <div class="row">
     <div class="contentarea">
+
       <div class="camera">
         <video id="video">Video stream not available.</video>
       </div>
-
-      <div><button id="startbutton">Capture Image</button></div>
 
       <canvas id="canvas"></canvas>
 
@@ -93,6 +107,55 @@
         <img id="photo" alt="The image captured will appear in this box." />
       </div>
     </div>
+    </div>
+
+
+      <div class="row captureRow">
+        <button id="startbutton">Capture Image</button>
+        <form>
+          
+        </form>
+      </div>
+      
+    </div>
+
+    <div
+        class="table"
+        style="
+          padding: 9em;
+          border-radius: 25px;
+          background-size: cover;
+          border: none;
+        "
+      >
+        <table class="table" style="text-align: center;border:none;">
+          <!-- <thead>
+            <tr style="color: white">
+              <th scope="col">Product</th>
+              <th scope="col">Image</th>
+              <th scope="col">Price</th>
+              <th scope="col">Source</th>
+            </tr>
+          </thead> -->
+          <tbody style="border:none;">
+            {% for item in items.ebay %}
+            <tr style="color: white;border: none;">
+              <td>
+                <img
+                  src="https://adobeinteriors.com/image/cache/catalog/living-room/sofas/oakley-red-leather-sofa-2-130x165.jpg"
+                  width="200"
+                  style="border-radius: 15px"
+                />
+              </td>
+              <td>{{item.title}}</td>
+              <td>$1</td>
+              <td>Kijiji</td>
+            </tr>
+            {% endfor %}       
+          </tbody>
+        </table>
+      </div>
+
     <script>
       (function () {
         // We will scale the photo width to this.
@@ -192,7 +255,7 @@
             the HTML page.*/
         function clearphoto() {
           var context = canvas.getContext("2d");
-          context.fillStyle = "#AAA";
+          context.fillStyle = "#000";
           context.fillRect(0, 0, canvas.width, canvas.height);
 
           var data = canvas.toDataURL("image/png");
