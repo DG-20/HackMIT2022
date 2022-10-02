@@ -100,8 +100,6 @@ def index(request):
 
         response = requests.request("POST", url, headers=headers, data=payload, files=files)
 
-        print(response.text)
-
         image_url = response.json()["url"]
 
         img_data = requests.get(image_url).content
